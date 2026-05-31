@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Регистрация — Team Finder{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h2>Регистрация</h2>
+
+  {% if form.non_field_errors %}
+    <div class="non-field-errors">
+      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+    </div>
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    <div class="name-fields">
+      <div>
+        {{ form.first_name }}
+        {% if form.first_name.errors %}
+          <ul class="errorlist">{% for e in form.first_name.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+      <div>
+        {{ form.last_name }}
+        {% if form.last_name.errors %}
+          <ul class="errorlist">{% for e in form.last_name.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+    </div>
+
+    {{ form.email }}
+    {% if form.email.errors %}
+      <ul class="errorlist">{% for e in form.email.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    {{ form.password1 }}
+    {% if form.password1.errors %}
+      <ul class="errorlist">{% for e in form.password1.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    {{ form.password2 }}
+    {% if form.password2.errors %}
+      <ul class="errorlist">{% for e in form.password2.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    <button type="submit">Зарегистрироваться</button>
+  </form>
+
+  <p class="auth-link">Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>
+</div>
+{% endblock %}

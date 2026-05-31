@@ -1,0 +1,88 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Team Finder{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/base.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/header.css' %}" />
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- ===== Header ===== -->
+<header class="site-header">
+  <div class="container">
+    <div class="header-content">
+      <!-- Logo -->
+      <a href="{% url 'project_list' %}" class="logo-link">Team Finder</a>
+
+      <!-- Main nav -->
+      <nav class="main-nav">
+        <a href="{% url 'project_list' %}" class="nav-link">Проекты</a>
+        <a href="{% url 'users_list' %}" class="nav-link">Пользователи</a>
+        {% if user.is_authenticated %}
+          <a href="{% url 'create_project' %}" class="nav-link black">Создать проект</a>
+        {% endif %}
+      </nav>
+
+      <!-- User actions -->
+      <div class="user-actions">
+        {% if user.is_authenticated %}
+          <a href="{% url 'favorites' %}" class="nav-link">Избранное</a>
+          <div class="user-menu button nav-link">
+            {% if user.avatar %}
+              <img src="{{ user.avatar.url }}" alt="Аватар" class="avatar" />
+            {% else %}
+              <img src="{% static 'images/default-avatar.png' %}" alt="Аватар" class="avatar" />
+            {% endif %}
+            <span class="username">{{ user.first_name }}</span>
+          </div>
+        {% else %}
+          <a href="{% url 'login' %}" class="nav-link">Войти</a>
+          <a href="{% url 'register' %}" class="nav-link black">Регистрация</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Sidebar (for authenticated users) -->
+{% if user.is_authenticated %}
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+<aside id="userSidebar" class="user-sidebar">
+  <a href="{% url 'profile' pk=user.pk %}">Мой профиль</a>
+  <a href="{% url 'edit_profile' %}">Редактировать профиль</a>
+  <a href="{% url 'favorites' %}">Избранное</a>
+  <a href="{% url 'create_project' %}">Создать проект</a>
+  <a href="{% url 'change_password' %}">Сменить пароль</a>
+  <hr class="sidebar-divider" />
+  <a href="{% url 'logout' %}">Выйти</a>
+</aside>
+{% endif %}
+
+<!-- ===== Messages ===== -->
+{% if messages %}
+<div style="max-width:1200px; margin:12px auto; padding:0 16px;">
+  {% for message in messages %}
+    <div style="padding:10px 16px; border-radius:8px; margin-bottom:8px;
+      background:{% if message.tags == 'error' %}#fee2e2{% elif message.tags == 'success' %}#d1fae5{% else %}#e0f2fe{% endif %};
+      color:{% if message.tags == 'error' %}#991b1b{% elif message.tags == 'success' %}#065f46{% else %}#0c4a6e{% endif %};">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- ===== Main content ===== -->
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<script src="{% static 'js/utils.js' %}"></script>
+<script src="{% static 'js/header.js' %}"></script>
+<script src="{% static 'js/share.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

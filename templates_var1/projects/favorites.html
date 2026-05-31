@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Избранное — Team Finder{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/project_list.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="project-container">
+  <div class="project-header">
+    <div>
+      <h1 class="project-title">Избранное</h1>
+      <p class="project-subtitle">Проекты, которые вы добавили в избранное</p>
+    </div>
+  </div>
+
+  {% if page_obj.object_list %}
+    <div class="projects-grid">
+      {% for project in page_obj %}
+        <div class="project-card">
+          <div class="project-card-header">
+            <div class="project-card-header-title">
+              <div class="project-owner-grid">
+                <a href="{% url 'profile' pk=project.author.pk %}">
+                  {% if project.author.avatar %}
+                    <img src="{{ project.author.avatar.url }}" alt="Аватар" width="28" height="28"
+                         style="border-radius:50%; object-fit:cover;" />
+                  {% else %}
+                    <img src="{% static 'images/default-avatar.png' %}" alt="Аватар" width="28" height="28"
+                         style="border-radius:50%; object-fit:cover;" />
+                  {% endif %}
+                </a>
+                <div class="project-owner">
+                  <a href="{% url 'profile' pk=project.author.pk %}">{{ project.author.get_full_name }}</a>
+                  <span class="project-date">{{ project.created_at|date:"d.m.Y" }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <a href="{% url 'project_detail' pk=project.pk %}">
+            <p class="project-card-title"><strong>{{ project.title }}</strong></p>
+          </a>
+          <p class="project-card-description">{{ project.description|truncatechars:100 }}</p>
+          <div class="project-card-footer">
+            <span class="{% if project.status == 'completed' %}project-status-black{% else %}project-status{% endif %}">
+              {{ project.get_status_display }}
+            </span>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="projects-grid">
+      <div class="empty-project-card">
+        <h3>В избранном пусто</h3>
+        <p>Добавляйте проекты в избранное, нажимая на иконку сердца.</p>
+        <a href="{% url 'project_list' %}" class="black-button" style="margin-top:16px;">Смотреть проекты</a>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+    <div style="display:flex; gap:8px; justify-content:center; margin-top:32px;">
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="white-button">← Назад</a>
+      {% endif %}
+      <span style="padding:5px 10px;">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="white-button">Вперёд →</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

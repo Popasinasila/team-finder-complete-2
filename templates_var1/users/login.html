@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Вход — Team Finder{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+  <h2>Вход</h2>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="non-field-errors">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+
+    {{ form.email }}
+    {% if form.email.errors %}
+      <ul class="errorlist">{% for e in form.email.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    {{ form.password }}
+    {% if form.password.errors %}
+      <ul class="errorlist">{% for e in form.password.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    {% endif %}
+
+    <button type="submit">Войти</button>
+  </form>
+
+  <p class="auth-link">Нет аккаунта? <a href="{% url 'register' %}">Зарегистрироваться</a></p>
+</div>
+{% endblock %}

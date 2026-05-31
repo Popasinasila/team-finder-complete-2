@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ profile_user.get_full_name }} — Team Finder{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}" />
+<link rel="stylesheet" href="{% static 'css/project_list.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+  <!-- Profile card -->
+  <div class="profile-header">
+    <div class="profile-info">
+      {% if profile_user.avatar %}
+        <img src="{{ profile_user.avatar.url }}" alt="Аватар" class="profile-avatar" />
+      {% else %}
+        <img src="{% static 'images/default-avatar.png' %}" alt="Аватар" class="profile-avatar" />
+      {% endif %}
+      <div class="profile-details">
+        <h1 class="profile-name">{{ profile_user.get_full_name }}</h1>
+        {% if profile_user.bio %}
+          <p class="profile-description">{{ profile_user.bio }}</p>
+        {% endif %}
+        <div class="profile-contacts">
+          <span>📧 {{ profile_user.email }}</span>
+          {% if profile_user.phone %}
+            <span>📞 {{ profile_user.phone }}</span>
+          {% endif %}
+          {% if profile_user.github %}
+            <a href="{{ profile_user.github }}" target="_blank" rel="noopener">GitHub</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="profile-actions">
+      <!-- Share button -->
+      <button class="black-button share-button" title="Поделиться профилем">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/>
+          <circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+        Поделиться профилем
+      </button>
+
+      {% if user == profile_user %}
+        <a href="{% url 'edit_profile' %}" class="black-button">Редактировать профиль</a>
+        <a href="{% url 'create_project' %}" class="black-button">Добавить проект</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- User's projects -->
+  <div style="margin-top:30px;">
+    <h2>Проекты</h2>
+    {% if projects %}
+      <div class="projects-grid projects-grid-single" style="grid-template-columns: 1fr 1fr;">
+        {% for project in projects %}
+          <div class="project-card">
+            <div class="project-card-header">
+              <div class="project-card-header-title">
+                <span class="{% if project.status == 'completed' %}project-status-black{% else %}project-status{% endif %}">
+                  {{ project.get_status_display }}
+                </span>
+              </div>
+              <span class="project-date">{{ project.created_at|date:"d.m.Y" }}</span>
+            </div>
+            <a href="{% url 'project_detail' pk=project.pk %}">
+              <p class="project-card-title"><strong>{{ project.title }}</strong></p>
+            </a>
+            <p class="project-card-description">{{ project.description|truncatechars:100 }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color:#666;">У пользователя пока нет проектов.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

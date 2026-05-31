@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ project.title }} — Team Finder{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/project_details.css' %}" />
+<link rel="stylesheet" href="{% static 'css/participants.css' %}" />
+{% endblock %}
+
+{% block content %}
+<div class="project-container">
+  <div class="project-card">
+    <div class="project-card-header">
+      <div class="project-card-header-left">
+        <a href="{% url 'profile' pk=project.author.pk %}">
+          {% if project.author.avatar %}
+            <img src="{{ project.author.avatar.url }}" alt="Аватар" class="project-author-avatar" />
+          {% else %}
+            <img src="{% static 'images/default-avatar.png' %}" alt="Аватар" class="project-author-avatar" />
+          {% endif %}
+        </a>
+        <div class="project-meta">
+          <a href="{% url 'profile' pk=project.author.pk %}" class="project-author">
+            {{ project.author.get_full_name }}
+          </a>
+          <span>{{ project.created_at|date:"d.m.Y" }}</span>
+        </div>
+      </div>
+
+      <div class="project-actions">
+        <!-- Share button -->
+        <button class="black-button black-button-share share-button" title="Поделиться ссылкой">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/>
+            <circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
+
+        <!-- Favorite toggle -->
+        {% if user.is_authenticated %}
+          <button
+            id="fav-toggle-btn"
+            class="black-button black-button-share {% if is_favorite %}favorite{% else %}not-favorite{% endif %}"
+            data-project-id="{{ project.pk }}"
+            data-toggle-url="{% url 'toggle_favorite' pk=project.pk %}"
+            title="{% if is_favorite %}Убрать из избранного{% else %}Добавить в избранное{% endif %}"
+          >
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5
+                2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81
+                14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55
+                11.54L12 21.35z"/>
+            </svg>
+          </button>
+        {% endif %}
+
+        <!-- Author actions -->
+        {% if is_author %}
+          <a href="{% url 'edit_project' pk=project.pk %}" class="black-button">Редактировать</a>
+          {% if project.status != 'completed' %}
+            <form method="post" action="{% url 'complete_project' pk=project.pk %}" style="display:inline;">
+              {% csrf_token %}
+              <button type="submit" class="black-button">Завершить проект</button>
+            </form>
+          {% endif %}
+        {% endif %}
+
+        <!-- Non-author join/leave -->
+        {% if user.is_authenticated and not is_author %}
+          <form method="post" action="{% url 'join_project' pk=project.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="black-button">
+              {% if is_participant %}Покинуть проект{% else %}Вступить в проект{% endif %}
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="project-card-body">
+      <div class="project-card-body-left">
+        <h1 class="project-title">{{ project.title }}</h1>
+        <span class="{% if project.status == 'completed' %}project-status-black{% else %}project-status{% endif %}">
+          {{ project.get_status_display }}
+        </span>
+        <p class="project-description" style="margin-top:16px;">{{ project.description }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Participants card — visible to all, but TZ says only owner sees it —>
+  {% if is_author %}
+  <div class="project-participants-card" style="margin-top:20px;">
+    <h3>Участники — <span id="participants-count">{{ participants.count }}</span></h3>
+    <div class="participants-list" id="participants-list">
+      {% if participants %}
+        {% for participant in participants %}
+          <a href="{% url 'profile' pk=participant.pk %}" id="participant-{{ participant.pk }}">
+            <div class="participant-item">
+              {% if participant.avatar %}
+                <img src="{{ participant.avatar.url }}" alt="Аватар" class="participant-avatar" />
+              {% else %}
+                <img src="{% static 'images/default-avatar.png' %}" alt="Аватар" class="participant-avatar" />
+              {% endif %}
+              <div class="participant-info">
+                <span class="participant-name">{{ participant.get_full_name }}</span>
+                <span class="participant-role">Участник</span>
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      {% else %}
+        <p id="no-participants">Пока нет участников</p>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/projects.js' %}"></script>
+<script>
+// Favorite toggle via AJAX on detail page
+const favBtn = document.getElementById('fav-toggle-btn');
+if (favBtn) {
+  favBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    fetch(favBtn.dataset.toggleUrl, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': window.getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.is_favorite) {
+        favBtn.classList.remove('not-favorite');
+        favBtn.classList.add('favorite');
+        favBtn.title = 'Убрать из избранного';
+      } else {
+        favBtn.classList.remove('favorite');
+        favBtn.classList.add('not-favorite');
+        favBtn.title = 'Добавить в избранное';
+      }
+    });
+  });
+}
+</script>
+{% endblock %}
